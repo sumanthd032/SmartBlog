@@ -8,15 +8,14 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <header class="bg-white shadow-md">
+   <header class="bg-white shadow-md">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <h1 class="text-3xl font-bold text-gray-900">SmartBlog</h1>
-            <div class="space-x-4">
-                <a href="/login.html" class="text-gray-600 hover:text-gray-900">Login</a>
-                <a href="/register.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Register</a>
-            </div>
+            <div id="auth-links" class="space-x-4">
+                </div>
         </nav>
     </header>
+
 
     <main class="container mx-auto px-6 py-8">
         <h2 class="text-2xl font-semibold mb-6">Latest Posts</h2>
@@ -25,6 +24,32 @@
             <p id="loading-message">Loading posts...</p>
         </div>
     </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const authLinksContainer = document.getElementById('auth-links');
+        const token = localStorage.getItem('accessToken');
+
+        if (token) {
+            // User is logged in
+            authLinksContainer.innerHTML = `
+                <a href="/dashboard.html" class="text-gray-600 hover:text-gray-900">My Dashboard</a>
+                <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Logout</button>
+            `;
+
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('accessToken');
+                window.location.reload(); // Refresh the page
+            });
+        } else {
+            // User is not logged in
+            authLinksContainer.innerHTML = `
+                <a href="/login.html" class="text-gray-600 hover:text-gray-900">Login</a>
+                <a href="/register.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Register</a>
+            `;
+        }
+    });
+    </script>
 
     <script>
         // Wait for the HTML document to be fully loaded before running the script
