@@ -3,21 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartBlog</title>
+    <title>SmartBlog - Your AI-Powered Blog</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Toastify.js for notifications -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 text-gray-800 font-sans">
 
-    <header class="bg-white shadow-md">
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="text-3xl font-bold text-gray-900">SmartBlog</h1>
+            <a href="/" class="text-3xl font-bold text-gray-900">SmartBlog</a>
+            <!-- Auth links will be populated by script -->
             <div id="auth-links" class="space-x-4">
-                </div>
+                <!-- Loading state -->
+                <div class="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
+            </div>
         </nav>
     </header>
 
+    <!-- Main Content -->
     <main class="container mx-auto px-6 py-8">
         
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">Welcome to SmartBlog</h1>
+            <p class="text-lg text-gray-600">Discover AI-powered insights and stories from our community.</p>
+        </div>
+
         <div class="mb-8">
             <input 
                 type="search" 
@@ -29,11 +42,21 @@
 
         <h2 class="text-2xl font-semibold mb-6">Latest Posts</h2>
         
-        <div id="posts-container" class="space-y-6">
-            </div>
+        <!-- Blog Posts Container -->
+        <div id="posts-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Posts will be loaded here by JavaScript -->
+        </div>
 
     </main>
 
+    <!-- Footer -->
+    <footer class="bg-white mt-12 py-6">
+        <div class="container mx-auto text-center text-gray-500">
+            <p>&copy; 2025 SmartBlog. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Script for header links -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const authLinksContainer = document.getElementById('auth-links');
@@ -42,33 +65,34 @@
             if (token) {
                 // User is logged in
                 authLinksContainer.innerHTML = `
-                    <a href="/dashboard.html" class="text-gray-600 hover:text-gray-900">My Dashboard</a>
+                    <a href="/dashboard.html" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">My Dashboard</a>
                     <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Logout</button>
                 `;
 
                 document.getElementById('logout-btn').addEventListener('click', () => {
                     localStorage.removeItem('accessToken');
-                    window.location.reload(); // Refresh the page
+                    Toastify({ text: "You have been logged out.", style: { background: "black" } }).showToast();
+                    setTimeout(() => window.location.reload(), 1500);
                 });
             } else {
                 // User is not logged in
                 authLinksContainer.innerHTML = `
-                    <a href="/login.html" class="text-gray-600 hover:text-gray-900">Login</a>
+                    <a href="/login.html" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Login</a>
                     <a href="/register.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Register</a>
                 `;
             }
         });
     </script>
 
+    <!-- Script for fetching and searching posts -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const postsContainer = document.getElementById('posts-container');
             const searchInput = document.getElementById('search-input');
             let debounceTimer;
 
-            // --- Function to Fetch and Render Posts ---
             const fetchAndRenderPosts = async (searchTerm = '') => {
-                postsContainer.innerHTML = '<p>Loading posts...</p>';
+                postsContainer.innerHTML = '<p class="col-span-full text-center">Loading posts...</p>';
                 
                 let url = '/api/posts/';
                 if (searchTerm) {
@@ -83,40 +107,41 @@
                     postsContainer.innerHTML = ''; 
 
                     if (posts.length === 0) {
-                        postsContainer.innerHTML = '<p>No posts found. Try a different search!</p>';
+                        postsContainer.innerHTML = '<p class="col-span-full text-center">No posts found. Try a different search or create one!</p>';
                         return;
                     }
 
                     posts.forEach(post => {
                         const postElement = document.createElement('div');
-                        postElement.className = 'bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300';
+                        postElement.className = 'bg-white rounded-lg shadow-md overflow-hidden transform hover:-translate-y-1 transition-transform duration-300';
                         
                         const postDate = new Date(post.created_at).toLocaleDateString('en-US', {
                             year: 'numeric', month: 'long', day: 'numeric'
                         });
 
-                        const summary = post.content.substring(0, 150) + (post.content.length > 150 ? '...' : '');
+                        const summary = post.content.substring(0, 120) + (post.content.length > 120 ? '...' : '');
 
                         postElement.innerHTML = `
-                            <a href="/post.html?id=${post.id}" class="block">
-                                <h3 class="text-xl font-bold mb-2 hover:text-blue-600">${post.title}</h3>
-                            </a>
-                            <p class="text-gray-600 mb-4">${summary}</p>
-                            <div class="flex items-center text-sm text-gray-500">
-                                <span>by User ID: ${post.author_id}</span>
-                                <span class="mx-2">&bull;</span>
-                                <span>${postDate}</span>
+                            <div class="p-6">
+                                <a href="/post.html?id=${post.id}" class="block">
+                                    <h3 class="text-xl font-bold mb-2 text-gray-900 hover:text-blue-600">${post.title}</h3>
+                                </a>
+                                <p class="text-gray-600 mb-4 h-20">${summary}</p>
+                                <div class="flex items-center text-sm text-gray-500 pt-4 border-t border-gray-100">
+                                    <span>by User ID: ${post.author_id}</span>
+                                    <span class="mx-2">&bull;</span>
+                                    <span>${postDate}</span>
+                                </div>
                             </div>
                         `;
                         postsContainer.appendChild(postElement);
                     });
                 } catch (error) {
                     console.error('Error fetching posts:', error);
-                    postsContainer.innerHTML = '<p class="text-red-500">Failed to load posts.</p>';
+                    postsContainer.innerHTML = '<p class="col-span-full text-center text-red-500">Failed to load posts.</p>';
                 }
             };
 
-            // --- Event Listener for the Search Input ---
             searchInput.addEventListener('keyup', () => {
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(() => {
@@ -125,7 +150,6 @@
                 }, 300); 
             });
 
-            // --- Initial Load ---
             fetchAndRenderPosts();
         });
     </script>
