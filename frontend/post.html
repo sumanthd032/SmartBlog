@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Post - SmartBlog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-6 py-4">
+            <a href="/" class="text-3xl font-bold text-gray-900 hover:text-gray-700">SmartBlog</a>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+        <article id="post-content" class="bg-white p-8 rounded-lg shadow-md max-w-3xl mx-auto"></article>
+
+        <section id="comment-section" class="bg-white p-8 rounded-lg shadow-md max-w-3xl mx-auto mt-8">
+            <h2 class="text-2xl font-bold mb-6">Comments</h2>
+
+            <form id="comment-form" class="mb-6 hidden">
+                <textarea id="comment-text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" rows="3" placeholder="Join the discussion..." required></textarea>
+                <button type="submit" class="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Post Comment</button>
+            </form>
+
+            <div id="comments-list" class="space-y-4"></div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const postContentEl = document.getElementById('post-content');
+            const commentsListEl = document.getElementById('comments-list');
+            const commentForm = document.getElementById('comment-form');
+
+            // Get post ID from URL (e.g., /post.html?id=1)
+            const params = new URLSearchParams(window.location.search);
+            const postId = params.get('id');
+
+            if (!postId) {
+                postContentEl.innerHTML = '<p class="text-red-500">Post ID not found.</p>';
+                return;
+            }
+
+            // --- Fetch and Display Post ---
+            try {
+                const response = await fetch(`/api/posts/${postId}`);
+                if (!response.ok) throw new Error('Post not found');
+                const post = await response.json();
+
+                document.title = `${post.title} - SmartBlog`;
+                const postDate = new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+                postContentEl.innerHTML = `
+                    <h1 class="text-4xl font-extrabold mb-4">${post.title}</h1>
+                    <div class="text-gray-500 mb-8">Posted on ${postDate}</div>
+                    <div class="prose lg:prose-xl max-w-none">${post.content.replace(/\n/g, '<br>')}</div>
+                `;
+
+                // --- Display Comments ---
+                commentsListEl.innerHTML = ''; // Clear
+                if (post.comments.length > 0) {
+                    post.comments.forEach(comment => {
+                        const commentEl = document.createElement('div');
+                        commentEl.className = 'border-l-4 border-gray-200 pl-4';
+                        const commentDate = new Date(comment.created_at).toLocaleString();
+                        commentEl.innerHTML = `
+                            <p>${comment.text}</p>
+                            <div class="text-sm text-gray-500 mt-1">
+                                <strong>${comment.author.username}</strong> &bull; ${commentDate}
+                            </div>
+                        `;
+                        commentsListEl.appendChild(commentEl);
+                    });
+                } else {
+                    commentsListEl.innerHTML = '<p>No comments yet. Be the first!</p>';
+                }
+
+            } catch (error) {
+                postContentEl.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+            }
+
+            // --- Handle Comment Form ---
+            const token = localStorage.getItem('accessToken');
+            if (token) {
+                commentForm.classList.remove('hidden'); // Show form if logged in
+            }
+
+            commentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const commentText = document.getElementById('comment-text').value;
+                if (!commentText.trim()) return;
+
+                const response = await fetch(`/api/posts/${postId}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ text: commentText })
+                });
+
+                if (response.ok) {
+                    window.location.reload(); // Easiest way to show the new comment
+                } else {
+                    alert('Failed to post comment.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
