@@ -1,7 +1,28 @@
 import datetime
 from pydantic import BaseModel
 
-# --- Post Schemas ---
+
+class CommentBase(BaseModel):
+    text: str
+
+class CommentCreate(CommentBase):
+    pass
+
+class CommentAuthor(BaseModel): 
+    username: str
+    class Config:
+        from_attributes = True
+
+class Comment(CommentBase):
+    id: int
+    author_id: int
+    post_id: int
+    created_at: datetime.datetime
+    author: CommentAuthor 
+
+    class Config:
+        from_attributes = True
+
 class PostBase(BaseModel):
     title: str
     content: str | None = None
@@ -13,12 +34,11 @@ class Post(PostBase):
     id: int
     author_id: int
     created_at: datetime.datetime
+    comments: list[Comment] = [] 
 
     class Config:
         from_attributes = True
 
-
-# --- User Schemas (NEW) ---
 class UserBase(BaseModel):
     username: str
 
@@ -28,6 +48,7 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: int
     posts: list[Post] = []
+    comments: list[Comment] = []
 
     class Config:
         from_attributes = True
