@@ -8,7 +8,7 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-   <header class="bg-white shadow-md">
+    <header class="bg-white shadow-md">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <h1 class="text-3xl font-bold text-gray-900">SmartBlog</h1>
             <div id="auth-links" class="space-x-4">
@@ -16,92 +16,117 @@
         </nav>
     </header>
 
-
     <main class="container mx-auto px-6 py-8">
+        
+        <div class="mb-8">
+            <input 
+                type="search" 
+                id="search-input" 
+                placeholder="🔍 Search posts by keyword..." 
+                class="w-full p-4 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+            >
+        </div>
+
         <h2 class="text-2xl font-semibold mb-6">Latest Posts</h2>
         
         <div id="posts-container" class="space-y-6">
-            <p id="loading-message">Loading posts...</p>
-        </div>
+            </div>
+
     </main>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const authLinksContainer = document.getElementById('auth-links');
-        const token = localStorage.getItem('accessToken');
+        document.addEventListener('DOMContentLoaded', () => {
+            const authLinksContainer = document.getElementById('auth-links');
+            const token = localStorage.getItem('accessToken');
 
-        if (token) {
-            // User is logged in
-            authLinksContainer.innerHTML = `
-                <a href="/dashboard.html" class="text-gray-600 hover:text-gray-900">My Dashboard</a>
-                <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Logout</button>
-            `;
+            if (token) {
+                // User is logged in
+                authLinksContainer.innerHTML = `
+                    <a href="/dashboard.html" class="text-gray-600 hover:text-gray-900">My Dashboard</a>
+                    <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Logout</button>
+                `;
 
-            document.getElementById('logout-btn').addEventListener('click', () => {
-                localStorage.removeItem('accessToken');
-                window.location.reload(); // Refresh the page
-            });
-        } else {
-            // User is not logged in
-            authLinksContainer.innerHTML = `
-                <a href="/login.html" class="text-gray-600 hover:text-gray-900">Login</a>
-                <a href="/register.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Register</a>
-            `;
-        }
-    });
+                document.getElementById('logout-btn').addEventListener('click', () => {
+                    localStorage.removeItem('accessToken');
+                    window.location.reload(); // Refresh the page
+                });
+            } else {
+                // User is not logged in
+                authLinksContainer.innerHTML = `
+                    <a href="/login.html" class="text-gray-600 hover:text-gray-900">Login</a>
+                    <a href="/register.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Register</a>
+                `;
+            }
+        });
     </script>
 
     <script>
-        // Wait for the HTML document to be fully loaded before running the script
         document.addEventListener('DOMContentLoaded', () => {
             const postsContainer = document.getElementById('posts-container');
-            const loadingMessage = document.getElementById('loading-message');
+            const searchInput = document.getElementById('search-input');
+            let debounceTimer;
 
-            // Fetch posts from our FastAPI backend
-            fetch('/api/posts/')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(posts => {
-                    // Clear the "Loading..." message
+            // --- Function to Fetch and Render Posts ---
+            const fetchAndRenderPosts = async (searchTerm = '') => {
+                postsContainer.innerHTML = '<p>Loading posts...</p>';
+                
+                let url = '/api/posts/';
+                if (searchTerm) {
+                    url += `?search=${encodeURIComponent(searchTerm)}`;
+                }
+
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    
+                    const posts = await response.json();
                     postsContainer.innerHTML = ''; 
 
                     if (posts.length === 0) {
-                        postsContainer.innerHTML = '<p>No posts found. Create one!</p>';
+                        postsContainer.innerHTML = '<p>No posts found. Try a different search!</p>';
                         return;
                     }
 
-                    // Loop through each post and create an HTML element for it
                     posts.forEach(post => {
                         const postElement = document.createElement('div');
-                        postElement.className = 'bg-white p-6 rounded-lg shadow-md';
-
-                        // Format the date for better readability
+                        postElement.className = 'bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300';
+                        
                         const postDate = new Date(post.created_at).toLocaleDateString('en-US', {
                             year: 'numeric', month: 'long', day: 'numeric'
                         });
 
+                        const summary = post.content.substring(0, 150) + (post.content.length > 150 ? '...' : '');
+
                         postElement.innerHTML = `
-                        <a href="/post.html?id=${post.id}" class="block">
-                            <h3 class="text-xl font-bold mb-2 hover:text-blue-600">${post.title}</h3>
-                        </a>
-                        <p class="text-gray-600 mb-4">${post.content}</p>
-                        <div class="flex items-center text-sm text-gray-500">
-                            <span>by User ID: ${post.author_id}</span>
-                            <span class="mx-2">&bull;</span>
-                            <span>${postDate}</span>
-                        </div>
-`;
+                            <a href="/post.html?id=${post.id}" class="block">
+                                <h3 class="text-xl font-bold mb-2 hover:text-blue-600">${post.title}</h3>
+                            </a>
+                            <p class="text-gray-600 mb-4">${summary}</p>
+                            <div class="flex items-center text-sm text-gray-500">
+                                <span>by User ID: ${post.author_id}</span>
+                                <span class="mx-2">&bull;</span>
+                                <span>${postDate}</span>
+                            </div>
+                        `;
                         postsContainer.appendChild(postElement);
                     });
-                })
-                .catch(error => {
+                } catch (error) {
                     console.error('Error fetching posts:', error);
-                    postsContainer.innerHTML = '<p class="text-red-500">Failed to load posts. Please try again later.</p>';
-                });
+                    postsContainer.innerHTML = '<p class="text-red-500">Failed to load posts.</p>';
+                }
+            };
+
+            // --- Event Listener for the Search Input ---
+            searchInput.addEventListener('keyup', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    const searchTerm = searchInput.value.trim();
+                    fetchAndRenderPosts(searchTerm);
+                }, 300); 
+            });
+
+            // --- Initial Load ---
+            fetchAndRenderPosts();
         });
     </script>
 

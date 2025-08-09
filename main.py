@@ -55,8 +55,13 @@ def create_post_for_user(
     return crud.create_user_post(db=db, post=post, user_id=user_id)
 
 @app.get("/api/posts/", response_model=list[schemas.Post])
-def read_posts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    posts = crud.get_posts(db, skip=skip, limit=limit)
+def read_posts(
+    skip: int = 0,
+    limit: int = 100,
+    search: str | None = None,
+    db: Session = Depends(get_db)
+):
+    posts = crud.get_posts(db, skip=skip, limit=limit, search=search)
     return posts
 
 @app.post("/api/posts/", response_model=schemas.Post)

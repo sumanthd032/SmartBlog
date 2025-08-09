@@ -21,8 +21,18 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.refresh(db_user)
     return db_user
 
-def get_posts(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Post).offset(skip).limit(limit).all()
+def get_posts(db: Session, skip: int = 0, limit: int = 100, search: str | None = None):
+    query = db.query(models.Post)
+
+    if search:
+        # Filter by searching in title and content
+        query = query.filter(
+            models.Post.title.contains(search) | models.Post.content.contains(search)
+        )
+
+    return query.order_by(models.Post.created_at.desc()).offset(skip).limit(limit).all()
+
+
 
 def create_user_post(db: Session, post: schemas.PostCreate, user_id: int):
     db_post = models.Post(**post.dict(), author_id=user_id)
