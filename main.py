@@ -107,5 +107,30 @@ def create_comment_for_post(
         raise HTTPException(status_code=404, detail="Post not found")
     return crud.create_comment(db=db, comment=comment, post_id=post_id, author_id=current_user.id)
 
+@app.get("/api/users/me/posts/", response_model=list[schemas.Post])
+def read_own_posts(
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    return crud.get_user_posts(db=db, user_id=current_user.id)
+
+# NEW: Endpoint to delete a post
+@app.delete("/api/posts/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_post_endpoint(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    db_post = crud.get_post(db, post_id=post_id)
+    if not db_post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    # Security Check: Ensure the user owns the post
+    if db_post.author_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this post")
+
+    crud.delete_post(db=db, post=db_post)
+    return {"detail": "Post deleted successfully"} # This message won't be sent due to 204 status, but is good for docs
+
 
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

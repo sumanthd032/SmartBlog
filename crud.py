@@ -60,3 +60,12 @@ def create_comment(db: Session, comment: schemas.CommentCreate, post_id: int, au
     db.refresh(db_comment)
     return db_comment
 
+def get_user_posts(db: Session, user_id: int):
+    """Fetches all posts for a specific user."""
+    return db.query(models.Post).filter(models.Post.author_id == user_id).order_by(models.Post.created_at.desc()).all()
+
+def delete_post(db: Session, post: models.Post):
+    """Deletes a post from the database."""
+    db.delete(post)
+    db.commit()
+    return
