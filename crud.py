@@ -77,3 +77,16 @@ def update_post(db: Session, post: models.Post, updated_data: schemas.PostCreate
     db.commit()
     db.refresh(post)
     return post
+
+def get_user_profile(db: Session, username: str):
+    """Fetches a user by username for their public profile."""
+    return db.query(models.User).filter(models.User.username == username).first()
+
+def update_user_profile(db: Session, user: models.User, profile_data: schemas.ProfileUpdate):
+    """Updates a user's profile information."""
+    update_data = profile_data.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(user, key, value)
+    db.commit()
+    db.refresh(user)
+    return user

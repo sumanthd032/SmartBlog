@@ -1,5 +1,6 @@
 import datetime
 from pydantic import BaseModel
+from typing import Optional
 
 
 class CommentBase(BaseModel):
@@ -47,6 +48,10 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: int
+    full_name: Optional[str] = None
+    bio: Optional[str] = None
+    social_links: Optional[str] = None
+    is_public: bool
     posts: list[Post] = []
     comments: list[Comment] = []
 
@@ -62,3 +67,20 @@ class TokenData(BaseModel):
 
 class AIRequest(BaseModel):
     content: str
+
+class ProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    bio: Optional[str] = None
+    social_links: Optional[str] = None
+    is_public: Optional[bool] = None
+
+class UserPublicProfile(UserBase):
+    id: int
+    full_name: Optional[str] = None
+    bio: Optional[str] = None
+    social_links: Optional[str] = None
+    posts: list[Post] = []
+
+    class Config:
+        from_attributes = True
+

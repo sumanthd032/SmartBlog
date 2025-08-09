@@ -146,4 +146,25 @@ def update_post_endpoint(
 
     return crud.update_post(db=db, post=db_post, updated_data=post_data)
 
+@app.get("/api/users/me", response_model=schemas.User)
+def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
+    return current_user
+
+@app.put("/api/users/me", response_model=schemas.User)
+def update_profile(
+    profile_data: schemas.ProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    return crud.update_user_profile(db=db, user=current_user, profile_data=profile_data)
+
+@app.get("/api/users/{username}", response_model=schemas.UserPublicProfile)
+def read_user_profile(username: str, db: Session = Depends(get_db)):
+    db_user = crud.get_user_profile(db, username=username)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not db_user.is_public:
+        raise HTTPException(status_code=403, detail="This profile is private")
+    return db_user
+
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

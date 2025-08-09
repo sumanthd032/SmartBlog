@@ -1,18 +1,24 @@
 
 import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean
 from sqlalchemy.orm import relationship
 from database import Base
 
 class User(Base):
     __tablename__ = "users"
+
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+    full_name = Column(String, nullable=True)
+    bio = Column(Text, nullable=True)
+    social_links = Column(String, nullable=True)
+    is_public = Column(Boolean, default=True)
+
     posts = relationship("Post", back_populates="author")
-    comments = relationship("Comment", back_populates="author") 
+    comments = relationship("Comment", back_populates="author")
 
 class Post(Base):
     __tablename__ = "posts"
