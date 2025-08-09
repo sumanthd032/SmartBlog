@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard - SmartBlog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="/" class="text-3xl font-bold text-gray-900">SmartBlog</a>
+            <div>
+                <a href="/" class="text-gray-600 hover:text-gray-900">Home</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+        <h1 class="text-3xl font-bold mb-6">My Dashboard</h1>
+
+        <div class="bg-white p-8 rounded-lg shadow-md max-w-2xl mx-auto">
+            <h2 class="text-2xl font-semibold mb-6">Create a New Post</h2>
+            <form id="create-post-form">
+                <div class="mb-4">
+                    <label for="title" class="block text-gray-700 text-sm font-bold mb-2">Title</label>
+                    <input type="text" id="title" name="title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-6">
+                    <label for="content" class="block text-gray-700 text-sm font-bold mb-2">Content (Markdown supported)</label>
+                    <textarea id="content" name="content" rows="10" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required></textarea>
+                </div>
+                <div class="flex items-center justify-end">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Publish Post
+                    </button>
+                </div>
+            </form>
+            <p id="message" class="text-center mt-4"></p>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('accessToken');
+            // If no token, redirect to login page immediately
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const form = document.getElementById('create-post-form');
+            const messageEl = document.getElementById('message');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const title = e.target.title.value;
+                const content = e.target.content.value;
+                
+                messageEl.textContent = '';
+
+                const response = await fetch('/api/posts/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // Crucial: Include the token in the Authorization header
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ title, content })
+                });
+
+                if (response.ok) {
+                    messageEl.textContent = 'Post created successfully!';
+                    messageEl.className = 'text-center text-green-500 mt-4';
+                    form.reset(); // Clear the form
+                    setTimeout(() => window.location.href = '/', 2000); // Redirect to homepage after 2s
+                } else if (response.status === 401) {
+                    // Token is invalid or expired
+                    messageEl.textContent = 'Session expired. Please log in again.';
+                    messageEl.className = 'text-center text-red-500 mt-4';
+                    localStorage.removeItem('accessToken');
+                    setTimeout(() => window.location.href = '/login.html', 2000);
+                } else {
+                    const error = await response.json();
+                    messageEl.textContent = error.detail || 'Failed to create post.';
+                    messageEl.className = 'text-center text-red-500 mt-4';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
