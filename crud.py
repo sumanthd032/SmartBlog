@@ -69,3 +69,11 @@ def delete_post(db: Session, post: models.Post):
     db.delete(post)
     db.commit()
     return
+
+def update_post(db: Session, post: models.Post, updated_data: schemas.PostCreate):
+    """Updates a post's data."""
+    post.title = updated_data.title
+    post.content = updated_data.content
+    db.commit()
+    db.refresh(post)
+    return post

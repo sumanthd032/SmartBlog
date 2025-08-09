@@ -114,7 +114,6 @@ def read_own_posts(
 ):
     return crud.get_user_posts(db=db, user_id=current_user.id)
 
-# NEW: Endpoint to delete a post
 @app.delete("/api/posts/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post_endpoint(
     post_id: int,
@@ -125,12 +124,26 @@ def delete_post_endpoint(
     if not db_post:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    # Security Check: Ensure the user owns the post
     if db_post.author_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this post")
 
     crud.delete_post(db=db, post=db_post)
-    return {"detail": "Post deleted successfully"} # This message won't be sent due to 204 status, but is good for docs
+    return {"detail": "Post deleted successfully"} 
 
+@app.put("/api/posts/{post_id}", response_model=schemas.Post)
+def update_post_endpoint(
+    post_id: int,
+    post_data: schemas.PostCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    db_post = crud.get_post(db, post_id=post_id)
+    if not db_post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    if db_post.author_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to update this post")
+
+    return crud.update_post(db=db, post=db_post, updated_data=post_data)
 
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

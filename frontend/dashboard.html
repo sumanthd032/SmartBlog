@@ -5,13 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Dashboard - SmartBlog</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Toastify.js for notifications -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </head>
 <body class="bg-gray-100 font-sans">
 
-    <!-- Header -->
     <header class="bg-white shadow-md">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="/" class="text-3xl font-bold text-gray-900">SmartBlog</a>
@@ -21,15 +19,12 @@
         </nav>
     </header>
 
-    <!-- Main Content -->
     <main class="container mx-auto px-6 py-8">
         <h1 class="text-3xl font-bold mb-6">My Dashboard</h1>
 
-        <!-- Create Post Form -->
         <div class="bg-white p-8 rounded-lg shadow-md max-w-2xl mx-auto">
             <h2 class="text-2xl font-semibold mb-6">Create a New Post</h2>
             <form id="create-post-form">
-                <!-- Title Input -->
                 <div class="mb-4">
                     <div class="flex justify-between items-center mb-2">
                         <label for="title" class="block text-gray-700 text-sm font-bold">Title</label>
@@ -37,12 +32,10 @@
                     </div>
                     <input type="text" id="title" name="title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                 </div>
-                <!-- Content Textarea -->
                 <div class="mb-4">
                     <label for="content" class="block text-gray-700 text-sm font-bold mb-2">Content (Markdown supported)</label>
                     <textarea id="content" name="content" rows="10" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required></textarea>
                 </div>
-                <!-- Publish Button -->
                 <div class="flex items-center justify-end">
                     <button type="submit" id="publish-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center">
                         <svg id="spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -55,11 +48,9 @@
             </form>
         </div>
 
-        <!-- My Posts Section -->
         <div class="bg-white p-8 rounded-lg shadow-md max-w-2xl mx-auto mt-8">
             <h2 class="text-2xl font-semibold mb-6">My Posts</h2>
             <div id="my-posts-container" class="space-y-4">
-                <!-- User's posts will be loaded here -->
                 <p>Loading your posts...</p>
             </div>
         </div>
@@ -73,7 +64,6 @@
                 return;
             }
 
-            // --- Element References ---
             const form = document.getElementById('create-post-form');
             const titleInput = document.getElementById('title');
             const contentTextarea = document.getElementById('content');
@@ -82,7 +72,6 @@
             const buttonText = document.getElementById('button-text');
             const postsContainer = document.getElementById('my-posts-container');
 
-            // --- Create Post Logic ---
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const title = titleInput.value;
@@ -102,7 +91,7 @@
                     if (response.ok) {
                         Toastify({ text: 'Post created successfully!', style: { background: "green" } }).showToast();
                         form.reset();
-                        fetchMyPosts(); // Refresh the list of posts
+                        fetchMyPosts(); 
                     } else {
                         throw new Error('Failed to create post.');
                     }
@@ -115,12 +104,10 @@
                 }
             });
             
-            // --- AI Features (Suggest Title) ---
             document.getElementById('suggest-title-btn').addEventListener('click', async () => {
-                // This logic can be expanded as before
+
             });
 
-            // --- My Posts Logic ---
             const fetchMyPosts = async () => {
                 postsContainer.innerHTML = '<p>Loading your posts...</p>';
                 try {
@@ -141,15 +128,15 @@
                         const postEl = document.createElement('div');
                         postEl.className = 'flex justify-between items-center p-4 border rounded-lg hover:bg-gray-50';
                         postEl.innerHTML = `
-                            <div>
-                                <h3 class="font-bold text-gray-800">${post.title}</h3>
-                                <p class="text-sm text-gray-500">Published on ${new Date(post.created_at).toLocaleDateString()}</p>
-                            </div>
-                            <div class="space-x-2 flex-shrink-0">
-                                <button class="edit-btn text-sm bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded" data-post-id="${post.id}">Edit</button>
-                                <button class="delete-btn text-sm bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded" data-post-id="${post.id}">Delete</button>
-                            </div>
-                        `;
+                        <div>
+                            <h3 class="font-bold text-gray-800">${post.title}</h3>
+                            <p class="text-sm text-gray-500">Published on ${new Date(post.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div class="space-x-2 flex-shrink-0">
+                            <a href="/edit-post.html?id=${post.id}" class="edit-btn text-sm bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded">Edit</a>
+                            <button class="delete-btn text-sm bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded" data-post-id="${post.id}">Delete</button>
+                        </div>
+                    `;
                         postsContainer.appendChild(postEl);
                     });
 
@@ -174,7 +161,7 @@
 
                         if (response.status === 204) {
                             Toastify({ text: "Post deleted successfully.", style: { background: "green" } }).showToast();
-                            fetchMyPosts(); // Re-fetch the list to update the UI
+                            fetchMyPosts(); 
                         } else {
                             const errorData = await response.json();
                             throw new Error(errorData.detail || 'Failed to delete post.');
@@ -185,7 +172,6 @@
                 }
             };
 
-            // Initial call to load the posts when the page loads
             fetchMyPosts();
         });
     </script>

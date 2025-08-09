@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Post - SmartBlog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-6 py-4">
+            <a href="/dashboard.html" class="text-gray-600 hover:text-gray-900">&larr; Back to Dashboard</a>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+        <div class="bg-white p-8 rounded-lg shadow-md max-w-2xl mx-auto">
+            <h2 class="text-2xl font-semibold mb-6">Edit Your Post</h2>
+            <form id="edit-post-form">
+                <div class="mb-4">
+                    <label for="title" class="block text-gray-700 text-sm font-bold mb-2">Title</label>
+                    <input type="text" id="title" name="title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-6">
+                    <label for="content" class="block text-gray-700 text-sm font-bold mb-2">Content</label>
+                    <textarea id="content" name="content" rows="12" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required></textarea>
+                </div>
+                <div class="flex items-center justify-end">
+                    <button type="submit" id="update-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center">
+                        <span id="update-btn-text">Save Changes</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const form = document.getElementById('edit-post-form');
+            const titleInput = document.getElementById('title');
+            const contentTextarea = document.getElementById('content');
+            const updateBtn = document.getElementById('update-btn');
+            const updateBtnText = document.getElementById('update-btn-text');
+
+            const params = new URLSearchParams(window.location.search);
+            const postId = params.get('id');
+
+            if (!postId) {
+                document.querySelector('main').innerHTML = '<p class="text-red-500 text-center">No post ID provided.</p>';
+                return;
+            }
+
+            // Fetch existing post data to populate the form
+            try {
+                const response = await fetch(`/api/posts/${postId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('Could not fetch post data.');
+                const post = await response.json();
+                titleInput.value = post.title;
+                contentTextarea.value = post.content;
+            } catch (error) {
+                Toastify({ text: error.message, style: { background: "red" } }).showToast();
+            }
+
+            // Handle form submission
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                updateBtnText.textContent = 'Saving...';
+                updateBtn.disabled = true;
+
+                const updatedData = {
+                    title: titleInput.value,
+                    content: contentTextarea.value
+                };
+
+                try {
+                    const response = await fetch(`/api/posts/${postId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(updatedData)
+                    });
+
+                    if (response.ok) {
+                        Toastify({ text: "Post updated successfully!", style: { background: "green" } }).showToast();
+                        setTimeout(() => window.location.href = '/dashboard.html', 1500);
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Failed to update post.');
+                    }
+                } catch (error) {
+                    Toastify({ text: error.message, style: { background: "red" } }).showToast();
+                    updateBtnText.textContent = 'Save Changes';
+                    updateBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
