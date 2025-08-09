@@ -24,15 +24,28 @@
             <h2 class="text-2xl font-semibold mb-6">Create a New Post</h2>
             <form id="create-post-form">
                 <div class="mb-4">
-                    <label for="title" class="block text-gray-700 text-sm font-bold mb-2">Title</label>
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="title" class="block text-gray-700 text-sm font-bold">Title</label>
+                        <button type="button" id="suggest-title-btn" class="text-sm bg-purple-500 hover:bg-purple-600 text-white font-bold py-1 px-3 rounded-full">✨ Suggest Title</button>
+                    </div>
                     <input type="text" id="title" name="title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                 </div>
-                <div class="mb-6">
+                
+                <div class="mb-4">
                     <label for="content" class="block text-gray-700 text-sm font-bold mb-2">Content (Markdown supported)</label>
                     <textarea id="content" name="content" rows="10" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required></textarea>
                 </div>
+    
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="summary" class="block text-gray-700 text-sm font-bold">AI-Generated Summary (Optional)</label>
+                        <button type="button" id="generate-summary-btn" class="text-sm bg-teal-500 hover:bg-teal-600 text-white font-bold py-1 px-3 rounded-full">✨ Generate Summary</button>
+                    </div>
+                    <textarea id="summary" name="summary" rows="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                </div>
+    
                 <div class="flex items-center justify-end">
-                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    <button type="submit" id="publish-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                         Publish Post
                     </button>
                 </div>
@@ -50,41 +63,125 @@
                 return;
             }
 
+            // Get all our elements
             const form = document.getElementById('create-post-form');
+            const suggestTitleBtn = document.getElementById('suggest-title-btn');
+            const generateSummaryBtn = document.getElementById('generate-summary-btn');
+            const titleInput = document.getElementById('title');
+            const contentTextarea = document.getElementById('content');
+            const summaryTextarea = document.getElementById('summary');
             const messageEl = document.getElementById('message');
+            const publishBtn = document.getElementById('publish-btn');
 
+            // --- Event Listener for Suggesting a Title ---
+            suggestTitleBtn.addEventListener('click', async () => {
+                const content = contentTextarea.value;
+                if (!content.trim()) {
+                    messageEl.textContent = 'Please write some content first!';
+                    messageEl.className = 'text-center text-yellow-600 mt-4';
+                    return;
+                }
+
+                suggestTitleBtn.textContent = 'Thinking...';
+                suggestTitleBtn.disabled = true;
+
+                try {
+                    const response = await fetch('/api/ai/suggest-title', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ content })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        titleInput.value = data.title;
+                        messageEl.textContent = 'Title suggested!';
+                        messageEl.className = 'text-center text-purple-600 mt-4';
+                    } else {
+                        throw new Error('Failed to suggest title.');
+                    }
+                } catch (error) {
+                    messageEl.textContent = 'An error occurred while suggesting a title.';
+                    messageEl.className = 'text-center text-red-500 mt-4';
+                } finally {
+                    suggestTitleBtn.textContent = '✨ Suggest Title';
+                    suggestTitleBtn.disabled = false;
+                }
+            });
+
+            // --- Event Listener for Generating a Summary ---
+            generateSummaryBtn.addEventListener('click', async () => {
+                const content = contentTextarea.value;
+                if (!content.trim()) {
+                    messageEl.textContent = 'Please write some content first!';
+                    messageEl.className = 'text-center text-yellow-600 mt-4';
+                    return;
+                }
+
+                generateSummaryBtn.textContent = 'Summarizing...';
+                generateSummaryBtn.disabled = true;
+
+                try {
+                    const response = await fetch('/api/ai/summarize', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ content })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        summaryTextarea.value = data.summary;
+                        messageEl.textContent = 'Summary generated!';
+                        messageEl.className = 'text-center text-teal-600 mt-4';
+                    } else {
+                        throw new Error('Failed to generate summary.');
+                    }
+                } catch (error) {
+                    messageEl.textContent = 'An error occurred while generating the summary.';
+                    messageEl.className = 'text-center text-red-500 mt-4';
+                } finally {
+                    generateSummaryBtn.textContent = '✨ Generate Summary';
+                    generateSummaryBtn.disabled = false;
+                }
+            });
+
+            // --- Event Listener for Publishing the Post ---
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const title = e.target.title.value;
                 const content = e.target.content.value;
                 
                 messageEl.textContent = '';
+                publishBtn.textContent = 'Publishing...';
+                publishBtn.disabled = true;
 
-                const response = await fetch('/api/posts/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // Crucial: Include the token in the Authorization header
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ title, content })
-                });
+                try {
+                    const response = await fetch('/api/posts/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ title, content })
+                    });
 
-                if (response.ok) {
-                    messageEl.textContent = 'Post created successfully!';
-                    messageEl.className = 'text-center text-green-500 mt-4';
-                    form.reset(); // Clear the form
-                    setTimeout(() => window.location.href = '/', 2000); // Redirect to homepage after 2s
-                } else if (response.status === 401) {
-                    // Token is invalid or expired
-                    messageEl.textContent = 'Session expired. Please log in again.';
+                    if (response.ok) {
+                        messageEl.textContent = 'Post created successfully! Redirecting...';
+                        messageEl.className = 'text-center text-green-500 mt-4';
+                        form.reset();
+                        setTimeout(() => window.location.href = '/', 2000);
+                    } else if (response.status === 401) {
+                        messageEl.textContent = 'Session expired. Please log in again.';
+                        messageEl.className = 'text-center text-red-500 mt-4';
+                        localStorage.removeItem('accessToken');
+                        setTimeout(() => window.location.href = '/login.html', 2000);
+                    } else {
+                        const error = await response.json();
+                        throw new Error(error.detail || 'Failed to create post.');
+                    }
+                } catch (error) {
+                    messageEl.textContent = error.message;
                     messageEl.className = 'text-center text-red-500 mt-4';
-                    localStorage.removeItem('accessToken');
-                    setTimeout(() => window.location.href = '/login.html', 2000);
-                } else {
-                    const error = await response.json();
-                    messageEl.textContent = error.detail || 'Failed to create post.';
-                    messageEl.className = 'text-center text-red-500 mt-4';
+                } finally {
+                    publishBtn.textContent = 'Publish Post';
+                    publishBtn.disabled = false;
                 }
             });
         });
