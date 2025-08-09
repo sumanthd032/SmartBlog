@@ -27,11 +27,7 @@
     </header>
 
     <main class="container mx-auto px-6 py-8">
-        <article id="post-content" class="bg-white p-8 rounded-lg shadow-md max-w-3xl mx-auto">
-            <div class="text-center p-8">
-                <p>Loading post...</p>
-            </div>
-        </article>
+        <article id="post-content" class="bg-white p-8 rounded-lg shadow-md max-w-3xl mx-auto"></article>
 
         <section id="comment-section" class="bg-white p-8 rounded-lg shadow-md max-w-3xl mx-auto mt-8">
             <h2 class="text-2xl font-bold mb-6">Discussion</h2>
@@ -49,7 +45,6 @@
             const postContentEl = document.getElementById('post-content');
             const commentsListEl = document.getElementById('comments-list');
             const commentForm = document.getElementById('comment-form');
-
             const params = new URLSearchParams(window.location.search);
             const postId = params.get('id');
 
@@ -69,7 +64,9 @@
 
                     postContentEl.innerHTML = `
                         <h1 class="text-4xl font-extrabold mb-4 text-gray-900">${post.title}</h1>
-                        <div class="text-gray-500 mb-8">Posted on ${postDate}</div>
+                        <div class="text-gray-500 mb-8">
+                            Posted by <a href="/user.html?username=${post.author.username}" class="font-medium hover:underline text-blue-600">${post.author.username}</a> on ${postDate}
+                        </div>
                         <div class="prose lg:prose-xl max-w-none">${marked.parse(post.content)}</div>
                     `;
 
@@ -82,9 +79,8 @@
                             commentEl.innerHTML = `
                                 <p class="text-gray-800">${comment.text}</p>
                                 <div class="text-sm text-gray-500 mt-1">
-                                    <strong>${comment.author.username}</strong> &bull; ${commentDate}
-                                </div>
-                            `;
+                                    <strong><a href="/user.html?username=${comment.author.username}" class="font-medium hover:underline text-blue-600">${comment.author.username}</a></strong> &bull; ${commentDate}
+                                </div>`;
                             commentsListEl.appendChild(commentEl);
                         });
                     } else {
@@ -105,14 +101,12 @@
                 e.preventDefault();
                 const commentText = document.getElementById('comment-text').value;
                 if (!commentText.trim()) return;
-
                 try {
                     const response = await fetch(`/api/posts/${postId}/comments`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                         body: JSON.stringify({ text: commentText })
                     });
-
                     if (response.ok) {
                         Toastify({ text: "Comment posted!", style: { background: "green" } }).showToast();
                         document.getElementById('comment-text').value = '';

@@ -9,10 +9,11 @@ class CommentBase(BaseModel):
 class CommentCreate(CommentBase):
     pass
 
-class CommentAuthor(BaseModel): 
+class CommentAuthor(BaseModel):
     username: str
     class Config:
         from_attributes = True
+
 
 class Comment(CommentBase):
     id: int
@@ -33,9 +34,9 @@ class PostCreate(PostBase):
 
 class Post(PostBase):
     id: int
-    author_id: int
+    author: CommentAuthor
     created_at: datetime.datetime
-    comments: list[Comment] = [] 
+    comments: list[Comment] = []
 
     class Config:
         from_attributes = True

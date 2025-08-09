@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - SmartBlog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="/" class="text-3xl font-bold text-gray-900">SmartBlog</a>
+            <div>
+                <a href="/dashboard.html" class="text-gray-600 hover:text-gray-900">&larr; Back to Dashboard</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+        <div class="bg-white p-8 rounded-lg shadow-md max-w-2xl mx-auto">
+            <h2 class="text-2xl font-semibold mb-6">Edit Your Profile</h2>
+            <form id="profile-form">
+                <div class="mb-4">
+                    <label for="full_name" class="block text-gray-700 text-sm font-bold mb-2">Full Name</label>
+                    <input type="text" id="full_name" name="full_name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label for="bio" class="block text-gray-700 text-sm font-bold mb-2">Bio</label>
+                    <textarea id="bio" name="bio" rows="4" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Tell us a little about yourself..."></textarea>
+                </div>
+                <div class="mb-6">
+                    <label for="social_links" class="block text-gray-700 text-sm font-bold mb-2">Social Links (JSON format)</label>
+                    <input type="text" id="social_links" name="social_links" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 font-mono" placeholder='{"twitter": "https://twitter.com/user", "linkedin": "..."}'>
+                    <p class="text-xs text-gray-500 mt-1">Example: {"github": "https://github.com/user"}</p>
+                </div>
+                <div class="mb-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="is_public" name="is_public" class="form-checkbox h-5 w-5 text-blue-600">
+                        <span class="ml-2 text-gray-700">Make my profile public</span>
+                    </label>
+                </div>
+                <div class="flex items-center justify-end">
+                    <button type="submit" id="save-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center">
+                        Save Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const form = document.getElementById('profile-form');
+            const fullNameInput = document.getElementById('full_name');
+            const bioTextarea = document.getElementById('bio');
+            const socialLinksInput = document.getElementById('social_links');
+            const isPublicCheckbox = document.getElementById('is_public');
+            const saveBtn = document.getElementById('save-btn');
+
+            try {
+                const response = await fetch('/api/users/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('Could not fetch profile.');
+                const user = await response.json();
+
+                fullNameInput.value = user.full_name || '';
+                bioTextarea.value = user.bio || '';
+                socialLinksInput.value = user.social_links || '';
+                isPublicCheckbox.checked = user.is_public;
+
+            } catch (error) {
+                Toastify({ text: error.message, style: { background: "red" } }).showToast();
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                saveBtn.textContent = 'Saving...';
+                saveBtn.disabled = true;
+
+                const profileData = {
+                    full_name: fullNameInput.value,
+                    bio: bioTextarea.value,
+                    social_links: socialLinksInput.value,
+                    is_public: isPublicCheckbox.checked
+                };
+
+                try {
+                    const response = await fetch('/api/users/me', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify(profileData)
+                    });
+                    if (response.ok) {
+                        Toastify({ text: "Profile updated successfully!", style: { background: "green" } }).showToast();
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Failed to update profile.');
+                    }
+                } catch (error) {
+                    Toastify({ text: error.message, style: { background: "red" } }).showToast();
+                } finally {
+                    saveBtn.textContent = 'Save Profile';
+                    saveBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

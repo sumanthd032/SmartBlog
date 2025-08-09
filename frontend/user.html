@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - SmartBlog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-6 py-4">
+            <a href="/" class="text-3xl font-bold text-gray-900">SmartBlog</a>
+        </nav>
+    </header>
+
+    <main id="main-content" class="container mx-auto px-6 py-8">
+        <!-- Profile content will be loaded here -->
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const mainContent = document.getElementById('main-content');
+            const params = new URLSearchParams(window.location.search);
+            const username = params.get('username');
+
+            if (!username) {
+                mainContent.innerHTML = '<p class="text-red-500 text-center">No username provided.</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/users/${username}`);
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Could not load profile.');
+                }
+                const profile = await response.json();
+                document.title = `${profile.full_name || profile.username}'s Profile - SmartBlog`;
+
+                let socialHTML = '';
+                if (profile.social_links) {
+                    try {
+                        const links = JSON.parse(profile.social_links);
+                        socialHTML = Object.entries(links).map(([key, value]) => `
+                            <a href="${value}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">${key.charAt(0).toUpperCase() + key.slice(1)}</a>
+                        `).join(' &bull; ');
+                    } catch { /* Ignore invalid JSON */ }
+                }
+
+                let postsHTML = '<p>This user has no posts yet.</p>';
+                if (profile.posts.length > 0) {
+                    postsHTML = profile.posts.map(post => `
+                        <a href="/post.html?id=${post.id}" class="block p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                            <h3 class="font-bold">${post.title}</h3>
+                            <p class="text-sm text-gray-500">Published on ${new Date(post.created_at).toLocaleDateString()}</p>
+                        </a>
+                    `).join('');
+                }
+
+                mainContent.innerHTML = `
+                    <div class="bg-white p-8 rounded-lg shadow-md max-w-3xl mx-auto mb-8">
+                        <h1 class="text-4xl font-bold">${profile.full_name || profile.username}</h1>
+                        <p class="text-lg text-gray-600 mt-2">@${profile.username}</p>
+                        <p class="mt-4">${profile.bio || 'No bio provided.'}</p>
+                        <div class="mt-4 text-sm">${socialHTML}</div>
+                    </div>
+                    <div class="bg-white p-8 rounded-lg shadow-md max-w-3xl mx-auto">
+                        <h2 class="text-2xl font-semibold mb-6">Posts by ${profile.username}</h2>
+                        <div class="space-y-4">${postsHTML}</div>
+                    </div>
+                `;
+
+            } catch (error) {
+                mainContent.innerHTML = `<p class="text-red-500 text-center">${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
