@@ -4,10 +4,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
-
 import crud, models, schemas, auth 
 from database import SessionLocal, engine
 models.Base.metadata.create_all(bind=engine)
+
+from database import get_db
 
 app = FastAPI()
 
@@ -56,5 +57,13 @@ def create_post_for_user(
 def read_posts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     posts = crud.get_posts(db, skip=skip, limit=limit)
     return posts
+
+@app.post("/api/posts/", response_model=schemas.Post)
+def create_post(
+    post: schemas.PostCreate, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    return crud.create_user_post(db=db, post=post, user_id=current_user.id)
 
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
