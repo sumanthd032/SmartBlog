@@ -1,6 +1,7 @@
 import datetime
 from pydantic import BaseModel
 
+# --- Post Schemas ---
 class PostBase(BaseModel):
     title: str
     content: str | None = None
@@ -14,4 +15,19 @@ class Post(PostBase):
     created_at: datetime.datetime
 
     class Config:
-        form_attributes = True
+        from_attributes = True
+
+
+# --- User Schemas (NEW) ---
+class UserBase(BaseModel):
+    username: str
+
+class UserCreate(UserBase):
+    password: str
+
+class User(UserBase):
+    id: int
+    posts: list[Post] = []
+
+    class Config:
+        from_attributes = True
