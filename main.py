@@ -3,6 +3,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm 
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+import ai
 
 import crud, models, schemas, auth 
 from database import SessionLocal, engine
@@ -65,5 +66,21 @@ def create_post(
     current_user: models.User = Depends(auth.get_current_user)
 ):
     return crud.create_user_post(db=db, post=post, user_id=current_user.id)
+
+@app.post("/api/ai/suggest-title", response_model=dict)
+def suggest_title_endpoint(
+    request: schemas.AIRequest,
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    title = ai.generate_title(request.content)
+    return {"title": title}
+
+@app.post("/api/ai/summarize", response_model=dict)
+def summarize_content_endpoint(
+    request: schemas.AIRequest,
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    summary = ai.generate_summary(request.content)
+    return {"summary": summary}
 
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
