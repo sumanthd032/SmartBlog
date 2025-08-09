@@ -82,11 +82,17 @@ def get_user_profile(db: Session, username: str):
     """Fetches a user by username for their public profile."""
     return db.query(models.User).filter(models.User.username == username).first()
 
-def update_user_profile(db: Session, user: models.User, profile_data: schemas.ProfileUpdate):
-    """Updates a user's profile information."""
+def update_user_profile(db: Session, user_id: int, profile_data: schemas.ProfileUpdate):
+    # First, fetch the user using the CURRENT session
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not db_user:
+        return None # Or raise an exception
+
+    # Now, apply the updates to this session-aware object
     update_data = profile_data.dict(exclude_unset=True)
     for key, value in update_data.items():
-        setattr(user, key, value)
+        setattr(db_user, key, value)
+    
     db.commit()
-    db.refresh(user)
-    return user
+    db.refresh(db_user)
+    return db_user

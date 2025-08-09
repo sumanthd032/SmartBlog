@@ -156,7 +156,7 @@ def update_profile(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
-    return crud.update_user_profile(db=db, user=current_user, profile_data=profile_data)
+    return crud.update_user_profile(db=db, user_id=current_user.id, profile_data=profile_data)
 
 @app.get("/api/users/{username}", response_model=schemas.UserPublicProfile)
 def read_user_profile(username: str, db: Session = Depends(get_db)):

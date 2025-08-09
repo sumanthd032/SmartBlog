@@ -5,122 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartBlog - Your AI-Powered Blog</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Toastify.js for notifications -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
 
-    <!-- Header -->
     <header class="bg-white shadow-md sticky top-0 z-50">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <a href="/" class="text-3xl font-bold text-gray-900">SmartBlog</a>
-            <!-- Auth links will be populated by script -->
-            <div id="auth-links" class="space-x-4">
-                <!-- Loading state -->
-                <div class="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
-            </div>
+            <div id="auth-links" class="space-x-2 flex items-center"></div>
         </nav>
     </header>
 
-    <!-- Main Content -->
     <main class="container mx-auto px-6 py-8">
-        
-        <div class="text-center mb-12">
-            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">Welcome to SmartBlog</h1>
-            <p class="text-lg text-gray-600">Discover AI-powered insights and stories from our community.</p>
-        </div>
-
         <div class="mb-8">
-            <input 
-                type="search" 
-                id="search-input" 
-                placeholder="🔍 Search posts by keyword..." 
-                class="w-full p-4 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
-            >
+            <input type="search" id="search-input" placeholder="🔍 Search posts..." class="w-full p-4 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
         </div>
-
         <h2 class="text-2xl font-semibold mb-6">Latest Posts</h2>
-        
-        <!-- Blog Posts Container -->
-        <div id="posts-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Posts will be loaded here by JavaScript -->
-        </div>
-
+        <div id="posts-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white mt-12 py-6">
-        <div class="container mx-auto text-center text-gray-500">
-            <p>&copy; 2025 SmartBlog. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <!-- Script for header links -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const authLinksContainer = document.getElementById('auth-links');
             const token = localStorage.getItem('accessToken');
 
             if (token) {
-                // User is logged in
                 authLinksContainer.innerHTML = `
-                    <a href="/dashboard.html" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">My Dashboard</a>
+                    <a href="/dashboard.html" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                    <a href="/profile.html" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">My Profile</a>
                     <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Logout</button>
                 `;
-
                 document.getElementById('logout-btn').addEventListener('click', () => {
                     localStorage.removeItem('accessToken');
                     Toastify({ text: "You have been logged out.", style: { background: "black" } }).showToast();
                     setTimeout(() => window.location.reload(), 1500);
                 });
             } else {
-                // User is not logged in
                 authLinksContainer.innerHTML = `
                     <a href="/login.html" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Login</a>
                     <a href="/register.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Register</a>
                 `;
             }
-        });
-    </script>
 
-    <!-- Script for fetching and searching posts -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
             const postsContainer = document.getElementById('posts-container');
             const searchInput = document.getElementById('search-input');
             let debounceTimer;
 
             const fetchAndRenderPosts = async (searchTerm = '') => {
                 postsContainer.innerHTML = '<p class="col-span-full text-center">Loading posts...</p>';
-                
                 let url = '/api/posts/';
-                if (searchTerm) {
-                    url += `?search=${encodeURIComponent(searchTerm)}`;
-                }
-
+                if (searchTerm) url += `?search=${encodeURIComponent(searchTerm)}`;
                 try {
                     const response = await fetch(url);
                     if (!response.ok) throw new Error('Network response was not ok');
-                    
                     const posts = await response.json();
-                    postsContainer.innerHTML = ''; 
-
+                    postsContainer.innerHTML = '';
                     if (posts.length === 0) {
-                        postsContainer.innerHTML = '<p class="col-span-full text-center">No posts found. Try a different search or create one!</p>';
+                        postsContainer.innerHTML = '<p class="col-span-full text-center">No posts found.</p>';
                         return;
                     }
-
                     posts.forEach(post => {
                         const postElement = document.createElement('div');
-                        postElement.className = 'bg-white rounded-lg shadow-md overflow-hidden transform hover:-translate-y-1 transition-transform duration-300';
-                        
-                        const postDate = new Date(post.created_at).toLocaleDateString('en-US', {
-                            year: 'numeric', month: 'long', day: 'numeric'
-                        });
-
+                        postElement.className = 'bg-white rounded-lg shadow-md overflow-hidden transform hover:-translate-y-1 transition-transform';
                         const summary = post.content.substring(0, 120) + (post.content.length > 120 ? '...' : '');
-
                         postElement.innerHTML = `
                             <div class="p-6">
                                 <a href="/post.html?id=${post.id}" class="block">
@@ -128,31 +76,23 @@
                                 </a>
                                 <p class="text-gray-600 mb-4 h-20">${summary}</p>
                                 <div class="flex items-center text-sm text-gray-500 pt-4 border-t border-gray-100">
-                                    <span>by User ID: ${post.author_id}</span>
-                                    <span class="mx-2">&bull;</span>
-                                    <span>${postDate}</span>
+                                    <span>by <a href="/user.html?username=${post.author.username}" class="font-medium hover:underline text-blue-600">${post.author.username}</a></span>
                                 </div>
                             </div>
                         `;
                         postsContainer.appendChild(postElement);
                     });
                 } catch (error) {
-                    console.error('Error fetching posts:', error);
-                    postsContainer.innerHTML = '<p class="col-span-full text-center text-red-500">Failed to load posts.</p>';
+                    postsContainer.innerHTML = `<p class="col-span-full text-center text-red-500">${error.message}</p>`;
                 }
             };
 
             searchInput.addEventListener('keyup', () => {
                 clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    const searchTerm = searchInput.value.trim();
-                    fetchAndRenderPosts(searchTerm);
-                }, 300); 
+                debounceTimer = setTimeout(() => fetchAndRenderPosts(searchInput.value.trim()), 300);
             });
-
             fetchAndRenderPosts();
         });
     </script>
-
 </body>
 </html>
