@@ -14,4 +14,4 @@ class Post(PostBase):
     created_at: datetime.datetime
 
     class Config:
-        orm_mode = True
+        form_attributes = True
