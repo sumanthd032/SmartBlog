@@ -16,21 +16,63 @@
 
     <main class="container mx-auto px-6 py-8">
         <h2 class="text-2xl font-semibold mb-6">Latest Posts</h2>
-
+        
         <div id="posts-container" class="space-y-6">
-
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h3 class="text-xl font-bold mb-2">My First Post</h3>
-                <p class="text-gray-600 mb-4">This is a short summary of the blog post content. It's just a static example for now.</p>
-                <div class="flex items-center text-sm text-gray-500">
-                    <span>by Author Name</span>
-                    <span class="mx-2">&bull;</span>
-                    <span>Aug 09, 2025</span>
-                </div>
-            </div>
-
+            <p id="loading-message">Loading posts...</p>
         </div>
     </main>
+
+    <script>
+        // Wait for the HTML document to be fully loaded before running the script
+        document.addEventListener('DOMContentLoaded', () => {
+            const postsContainer = document.getElementById('posts-container');
+            const loadingMessage = document.getElementById('loading-message');
+
+            // Fetch posts from our FastAPI backend
+            fetch('/api/posts/')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(posts => {
+                    // Clear the "Loading..." message
+                    postsContainer.innerHTML = ''; 
+
+                    if (posts.length === 0) {
+                        postsContainer.innerHTML = '<p>No posts found. Create one!</p>';
+                        return;
+                    }
+
+                    // Loop through each post and create an HTML element for it
+                    posts.forEach(post => {
+                        const postElement = document.createElement('div');
+                        postElement.className = 'bg-white p-6 rounded-lg shadow-md';
+
+                        // Format the date for better readability
+                        const postDate = new Date(post.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric', month: 'long', day: 'numeric'
+                        });
+
+                        postElement.innerHTML = `
+                            <h3 class="text-xl font-bold mb-2">${post.title}</h3>
+                            <p class="text-gray-600 mb-4">${post.content}</p>
+                            <div class="flex items-center text-sm text-gray-500">
+                                <span>by User ID: ${post.author_id}</span>
+                                <span class="mx-2">&bull;</span>
+                                <span>${postDate}</span>
+                            </div>
+                        `;
+                        postsContainer.appendChild(postElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching posts:', error);
+                    postsContainer.innerHTML = '<p class="text-red-500">Failed to load posts. Please try again later.</p>';
+                });
+        });
+    </script>
 
 </body>
 </html>
