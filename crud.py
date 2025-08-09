@@ -39,3 +39,14 @@ def authenticate_user(db: Session, username: str, password: str):
     if not auth.verify_password(password, user.hashed_password):
         return False
     return user
+
+def get_post(db: Session, post_id: int):
+    return db.query(models.Post).filter(models.Post.id == post_id).first()
+
+def create_comment(db: Session, comment: schemas.CommentCreate, post_id: int, author_id: int):
+    db_comment = models.Comment(**comment.dict(), post_id=post_id, author_id=author_id)
+    db.add(db_comment)
+    db.commit()
+    db.refresh(db_comment)
+    return db_comment
+

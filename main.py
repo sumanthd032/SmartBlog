@@ -83,4 +83,24 @@ def summarize_content_endpoint(
     summary = ai.generate_summary(request.content)
     return {"summary": summary}
 
+@app.get("/api/posts/{post_id}", response_model=schemas.Post)
+def read_post(post_id: int, db: Session = Depends(get_db)):
+    db_post = crud.get_post(db, post_id=post_id)
+    if db_post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return db_post
+
+@app.post("/api/posts/{post_id}/comments", response_model=schemas.Comment)
+def create_comment_for_post(
+    post_id: int,
+    comment: schemas.CommentCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    db_post = crud.get_post(db, post_id=post_id)
+    if db_post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return crud.create_comment(db=db, comment=comment, post_id=post_id, author_id=current_user.id)
+
+
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
