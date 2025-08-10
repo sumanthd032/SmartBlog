@@ -1,5 +1,17 @@
 #  SmartBlog: Smart Blogging Platform
 
+<p>
+<img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" alt="FastAPI"> 
+<img src="https://img.shields.io/badge/SQLAlchemy-D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=white" alt="SQLAlchemy"> 
+<img src="https://img.shields.io/badge/Gemini_API-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini API"> 
+<img src="https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5"> 
+<img src="https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="TailwindCSS"> 
+<a href="https://smartblog-p80i.onrender.com/" target="_blank">
+<img src="https://img.shields.io/badge/Live_Demo-4A90E2?style=for-the-badge&logo=render" alt="Live Demo">
+</a>
+</p>
+
+
 Welcome to **SmartBlog**, a modern, full-stack blogging application built from the ground up to showcase a powerful combination of Python, FastAPI, and Google's Gemini API. This project is a comprehensive, hands-on guide to building a feature-rich web application with a professional UI/UX.
 
 SmartBlog allows users to register, create, manage, and delete their blog posts, interact with content through comments, and leverage AI to enhance their writing process.
