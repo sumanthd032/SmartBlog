@@ -6,7 +6,7 @@ SmartBlog allows users to register, create, manage, and delete their blog posts,
 
 ---
 
-## ✨ Features
+## Features
 
 - **Full User Authentication**: Secure user registration and login system using JWT (JSON Web Tokens).
 - **Complete Post Management (CRUD)**: Logged-in users can Create, Read, Update, and Delete their own blog posts.
@@ -15,7 +15,7 @@ SmartBlog allows users to register, create, manage, and delete their blog posts,
 - **Rich Markdown Editor**: A beautiful side-by-side editor with a live preview for writing content.
 ---
 
-## 🔧 Tech Stack
+## Tech Stack
 
 - **Backend**: **Python** with **FastAPI**
 - **Database**: **SQLite** with **SQLAlchemy ORM**
@@ -27,7 +27,7 @@ SmartBlog allows users to register, create, manage, and delete their blog posts,
 
 ---
 
-## ⚙️ Setup and Installation
+## Setup and Installation
 
 Follow these steps to get the project running on your local machine.
 
@@ -84,7 +84,7 @@ Your SmartBlog application is now running! Open your browser and navigate to **`
 
 ---
 
-## 📖 How to Use
+## How to Use
 
 1.  **Register a New Account**: Click the "Register" button on the homepage to create a new user.
 2.  **Login**: Sign in with your new credentials.
